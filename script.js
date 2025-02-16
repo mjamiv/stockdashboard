@@ -1,48 +1,73 @@
-// script.js (excerpt where we build each stock card)
+// script.js
 
-// Destructure fields from 'stock'
-const {
-  symbol = 'N/A',
-  name = 'N/A',
-  price = 'N/A',
-  open = 'N/A',
-  high = 'N/A',
-  low = 'N/A',
-  volume = 'N/A',
-  previous_close: previousClose = 'N/A',
-  change = 'N/A',
-  change_percent: changePercent = 'N/A',
-  pre_or_post_market: preOrPostMarket = 'N/A',
-  pre_or_post_market_change: preOrPostMarketChange = 'N/A',
-  pre_or_post_market_change_percent: preOrPostMarketChangePercent = 'N/A',
-  last_update_utc: lastUpdate = 'N/A'
-} = stock;
+const stockContainer = document.getElementById('stock-container');
 
-// Create the card
-const stockDiv = document.createElement('div');
-stockDiv.className = 'stock-info';
+// Update these symbols as desired
+const symbols = ['MSTR', 'MARA', 'RIOT', 'IBIT'];
 
-// Apply color-coding based on change
-const numericChange = parseFloat(change);
-if (!isNaN(numericChange)) {
-  if (numericChange > 0) {
-    stockDiv.classList.add('positive-change');
-  } else if (numericChange < 0) {
-    stockDiv.classList.add('negative-change');
+const options = {
+  method: 'GET',
+  headers: {
+    'X-RapidAPI-Key': 'b83abbc192mshf353298bef11115p1864e4jsn6542ca66d145',  // Replace with your key if needed
+    'X-RapidAPI-Host': 'real-time-finance-data.p.rapidapi.com'
   }
-}
+};
 
-// Fill in the card content
-stockDiv.innerHTML = `
-  <h2>${name} (${symbol})</h2>
-  <p><strong>Price:</strong> $${price}</p>
-  <p><strong>Open:</strong> $${open} | <strong>High:</strong> $${high} | <strong>Low:</strong> $${low}</p>
-  <p><strong>Previous Close:</strong> $${previousClose}</p>
-  <p><strong>Change:</strong> ${change} (${changePercent}%)</p>
-  <p><strong>Pre/Post Market:</strong> $${preOrPostMarket} (Change: ${preOrPostMarketChange}, ${preOrPostMarketChangePercent}%)</p>
-  <p><strong>Volume:</strong> ${volume}</p>
-  <p><strong>Last Update:</strong> ${lastUpdate}</p>
-`;
+async function fetchStockData() {
+  try {
+    const symbolParam = encodeURIComponent(symbols.join(', '));
+    const endpoint = `https://real-time-finance-data.p.rapidapi.com/stock-quote?symbol=${symbolParam}&language=en`;
+    console.log('Fetching from:', endpoint);
 
-// Append to container
-stockContainer.appendChild(stockDiv);
+    // Fetch the raw text in case the API prefix includes '1'
+    let rawText = await (await fetch(endpoint, options)).text();
+    console.log('Raw text:', rawText);
+
+    // Remove leading '1' if present
+    if (rawText.startsWith('1')) {
+      rawText = rawText.substring(1).trim();
+      console.log('Stripped leading "1":', rawText);
+    }
+
+    // Parse the JSON
+    const parsed = JSON.parse(rawText);
+    console.log('Parsed data:', parsed);
+
+    // Clear the container
+    stockContainer.innerHTML = '';
+
+    // Check if parsed.data is an array of stock objects
+    if (parsed && Array.isArray(parsed.data)) {
+      parsed.data.forEach(stock => {
+        const {
+          symbol = 'N/A',
+          name = 'N/A',
+          price = 'N/A',
+          open = 'N/A',
+          high = 'N/A',
+          low = 'N/A',
+          volume = 'N/A',
+          previous_close: previousClose = 'N/A',
+          change = 'N/A',
+          change_percent: changePercent = 'N/A',
+          pre_or_post_market: preOrPostMarket = 'N/A',
+          pre_or_post_market_change: preOrPostMarketChange = 'N/A',
+          pre_or_post_market_change_percent: preOrPostMarketChangePercent = 'N/A',
+          last_update_utc: lastUpdate = 'N/A'
+        } = stock;
+
+        // Create the card element
+        const stockDiv = document.createElement('div');
+        stockDiv.className = 'stock-info';
+
+        // Color-code the background based on price change
+        const numericChange = parseFloat(change);
+        if (!isNaN(numericChange)) {
+          if (numericChange > 0) {
+            stockDiv.classList.add('positive-change');
+          } else if (numericChange < 0) {
+            stockDiv.classList.add('negative-change');
+          }
+        }
+
+        // Bui
