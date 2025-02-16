@@ -1,11 +1,8 @@
 // script.js
 
 const stockContainer = document.getElementById('stock-container');
-
-// Symbols we want to track.
 const symbols = ['RIOT', 'MSTR'];
 
-// RapidAPI details
 const options = {
   method: 'GET',
   headers: {
@@ -16,69 +13,39 @@ const options = {
 
 async function fetchStockData() {
   try {
-    // Build the endpoint URL.
-    // Joining symbols with a comma and space, then encoding produces "RIOT%2C%20MSTR"
     const symbolParam = encodeURIComponent(symbols.join(', '));
     const endpoint = `https://real-time-finance-data.p.rapidapi.com/stock-quote?symbol=${symbolParam}&language=en`;
 
-    const response = await fetch(endpoint, options);
-    const data = await response.json();
-    console.log(data); // Inspect the returned structure
-
-    // Clear out the container before rendering fresh data
+    // Sometimes the response might have an extra "1" at the start.
+    let text = await (await fetch(endpoint, options)).text();
+    if (text.startsWith('1')) {
+      text = text.substring(1).trim();
+    }
+    
+    const data = JSON.parse(text);
+    
+    // Clear the container for fresh data.
     stockContainer.innerHTML = '';
 
-    // Assuming the API returns an array of stock objects
-    if (Array.isArray(data)) {
-      data.forEach(stock => {
-        // Extract the desired fields
-        const symbol = stock.symbol || 'N/A';
-        const name = stock.name || 'N/A';
-        const price = stock.price !== undefined ? stock.price : 'N/A';
-        const open = stock.open !== undefined ? stock.open : 'N/A';
-        const high = stock.high !== undefined ? stock.high : 'N/A';
-        const low = stock.low !== undefined ? stock.low : 'N/A';
-        const volume = stock.volume || 'N/A';
-        const previousClose = stock.previous_close !== undefined ? stock.previous_close : 'N/A';
-        const change = stock.change !== undefined ? stock.change : 'N/A';
-        const changePercent = stock.change_percent !== undefined ? stock.change_percent : 'N/A';
-        const preOrPostMarket = stock.pre_or_post_market !== undefined ? stock.pre_or_post_market : 'N/A';
-        const preOrPostMarketChange = stock.pre_or_post_market_change !== undefined ? stock.pre_or_post_market_change : 'N/A';
-        const preOrPostMarketChangePercent = stock.pre_or_post_market_change_percent !== undefined ? stock.pre_or_post_market_change_percent : 'N/A';
-        const lastUpdate = stock.last_update_utc || 'N/A';
-
-        // Build HTML output for each stock
-        const stockDiv = document.createElement('div');
-        stockDiv.className = 'stock-info';
-        stockDiv.innerHTML = `
-          <h2>${name} (${symbol})</h2>
-          <p><strong>Price:</strong> $${price}</p>
-          <p><strong>Open:</strong> $${open} | <strong>High:</strong> $${high} | <strong>Low:</strong> $${low}</p>
-          <p><strong>Previous Close:</strong> $${previousClose}</p>
-          <p><strong>Change:</strong> ${change} (${changePercent}%)</p>
-          <p><strong>Pre/Post Market:</strong> $${preOrPostMarket} (Change: ${preOrPostMarketChange}, ${preOrPostMarketChangePercent}%)</p>
-          <p><strong>Volume:</strong> ${volume}</p>
-          <p><strong>Last Update:</strong> ${lastUpdate}</p>
-        `;
-        stockContainer.appendChild(stockDiv);
-      });
-    } else if (data && Array.isArray(data.data)) {
-      // In case the API nests results under a 'data' property
+    // Use the data array inside the top-level JSON object.
+    if (data && Array.isArray(data.data)) {
       data.data.forEach(stock => {
-        const symbol = stock.symbol || 'N/A';
-        const name = stock.name || 'N/A';
-        const price = stock.price !== undefined ? stock.price : 'N/A';
-        const open = stock.open !== undefined ? stock.open : 'N/A';
-        const high = stock.high !== undefined ? stock.high : 'N/A';
-        const low = stock.low !== undefined ? stock.low : 'N/A';
-        const volume = stock.volume || 'N/A';
-        const previousClose = stock.previous_close !== undefined ? stock.previous_close : 'N/A';
-        const change = stock.change !== undefined ? stock.change : 'N/A';
-        const changePercent = stock.change_percent !== undefined ? stock.change_percent : 'N/A';
-        const preOrPostMarket = stock.pre_or_post_market !== undefined ? stock.pre_or_post_market : 'N/A';
-        const preOrPostMarketChange = stock.pre_or_post_market_change !== undefined ? stock.pre_or_post_market_change : 'N/A';
-        const preOrPostMarketChangePercent = stock.pre_or_post_market_change_percent !== undefined ? stock.pre_or_post_market_change_percent : 'N/A';
-        const lastUpdate = stock.last_update_utc || 'N/A';
+        const {
+          symbol = 'N/A',
+          name = 'N/A',
+          price = 'N/A',
+          open = 'N/A',
+          high = 'N/A',
+          low = 'N/A',
+          volume = 'N/A',
+          previous_close: previousClose = 'N/A',
+          change = 'N/A',
+          change_percent: changePercent = 'N/A',
+          pre_or_post_market: preOrPostMarket = 'N/A',
+          pre_or_post_market_change: preOrPostMarketChange = 'N/A',
+          pre_or_post_market_change_percent: preOrPostMarketChangePercent = 'N/A',
+          last_update_utc: lastUpdate = 'N/A'
+        } = stock;
 
         const stockDiv = document.createElement('div');
         stockDiv.className = 'stock-info';
@@ -103,6 +70,6 @@ async function fetchStockData() {
   }
 }
 
-// Fetch on page load and then every 30 seconds (30000ms)
+// Initial fetch and refresh every 30 seconds.
 fetchStockData();
 setInterval(fetchStockData, 30000);
