@@ -14,45 +14,62 @@ const options = {
   }
 };
 
-// Function to fetch data for a single symbol
-async function fetchStockForSymbol(symbol) {
-  const endpoint = `https://real-time-finance-data.p.rapidapi.com/stock/v3/get-quote?symbol=${symbol}`;
-  const response = await fetch(endpoint, options);
-  const data = await response.json();
-  return data;
-}
-
-// Function to fetch and render stock data for all symbols
 async function fetchStockData() {
-  // Clear out the container before rendering fresh data
-  stockContainer.innerHTML = '';
+  try {
+    // Build the endpoint URL.
+    // Joining symbols with a comma and space, then encoding produces "RIOT%2C%20MSTR"
+    const symbolParam = encodeURIComponent(symbols.join(', '));
+    const endpoint = `https://real-time-finance-data.p.rapidapi.com/stock-quote?symbol=${symbolParam}&language=en`;
 
-  for (const symbol of symbols) {
-    try {
-      const data = await fetchStockForSymbol(symbol);
-      
-      // Extract key values from the API response.
-      // Adjust these paths if your API response structure is different.
-      const price = data.regularMarketPrice;
-      const change = data.regularMarketChange;
-      const percentChange = data.regularMarketChangePercent;
+    const response = await fetch(endpoint, options);
+    const data = await response.json();
 
-      // Build HTML output for this stock
-      const stockDiv = document.createElement('div');
-      stockDiv.className = 'stock-info';
-      stockDiv.innerHTML = `
-        <h2>${symbol}</h2>
-        <p>Price: $${price !== undefined ? price : 'N/A'}</p>
-        <p>Change: ${change !== undefined ? change : 'N/A'} (${percentChange !== undefined ? percentChange : 'N/A'}%)</p>
-      `;
-      stockContainer.appendChild(stockDiv);
-    } catch (error) {
-      console.error(`Error fetching data for ${symbol}:`, error);
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'stock-info error';
-      errorDiv.innerHTML = `<h2>${symbol}</h2><p style="color:red;">Error fetching data</p>`;
-      stockContainer.appendChild(errorDiv);
+    console.log(data); // Inspect the structure in the console
+
+    // Clear out the container before rendering fresh data
+    stockContainer.innerHTML = '';
+
+    // Depending on the API, the data might be an array or nested under a key.
+    // Here we'll assume it's an array of stock objects.
+    if (Array.isArray(data)) {
+      data.forEach(stock => {
+        const symbol = stock.symbol || 'N/A';
+        const price = stock.regularMarketPrice || 'N/A';
+        const change = stock.regularMarketChange || 'N/A';
+        const percentChange = stock.regularMarketChangePercent || 'N/A';
+
+        const stockDiv = document.createElement('div');
+        stockDiv.className = 'stock-info';
+        stockDiv.innerHTML = `
+          <h2>${symbol}</h2>
+          <p>Price: $${price}</p>
+          <p>Change: ${change} (${percentChange}%)</p>
+        `;
+        stockContainer.appendChild(stockDiv);
+      });
+    } else if (data && data.data) {
+      // If your API nests the results in a 'data' property
+      data.data.forEach(stock => {
+        const symbol = stock.symbol || 'N/A';
+        const price = stock.regularMarketPrice || 'N/A';
+        const change = stock.regularMarketChange || 'N/A';
+        const percentChange = stock.regularMarketChangePercent || 'N/A';
+
+        const stockDiv = document.createElement('div');
+        stockDiv.className = 'stock-info';
+        stockDiv.innerHTML = `
+          <h2>${symbol}</h2>
+          <p>Price: $${price}</p>
+          <p>Change: ${change} (${percentChange}%)</p>
+        `;
+        stockContainer.appendChild(stockDiv);
+      });
+    } else {
+      stockContainer.innerHTML = `<p>No data available</p>`;
     }
+  } catch (error) {
+    console.error('Error fetching stock data:', error);
+    stockContainer.innerHTML = `<p style="color:red;">Error fetching data. Check console.</p>`;
   }
 }
 
