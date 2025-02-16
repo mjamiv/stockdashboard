@@ -2,10 +2,10 @@
 
 const stockContainer = document.getElementById('stock-container');
 
-// Symbols we want to track. You can add more symbols if needed.
-const symbols = ['AAPL', 'MSFT'];
+// Symbols we want to track.
+const symbols = ['RIOT', 'MSTR'];
 
-// RapidAPI details (replace with your actual values)
+// RapidAPI details
 const options = {
   method: 'GET',
   headers: {
@@ -14,52 +14,48 @@ const options = {
   }
 };
 
-// Function to fetch stock data
+// Function to fetch data for a single symbol
+async function fetchStockForSymbol(symbol) {
+  const endpoint = `https://real-time-finance-data.p.rapidapi.com/stock/v3/get-quote?symbol=${symbol}`;
+  const response = await fetch(endpoint, options);
+  const data = await response.json();
+  return data;
+}
+
+// Function to fetch and render stock data for all symbols
 async function fetchStockData() {
-  try {
-    // We can batch multiple symbols in one request if the API allows
-    // Example endpoint (adjust according to your specific RapidAPI docs):
-    //   /stock/v3/get-quote?symbol=AAPL,MSFT
-    const endpoint = `https://real-time-finance-data.p.rapidapi.com/stock/v3/get-quote?symbol=${symbols.join(',')}`;
-    
-    const response = await fetch(endpoint, options);
-    const data = await response.json();
+  // Clear out the container before rendering fresh data
+  stockContainer.innerHTML = '';
 
-    // This data structure might vary depending on the API. 
-    // Check your API’s documentation for the exact JSON format.
-    // For demonstration, let's assume we get an array or an object with a "quotes" key:
-    const quotes = data.quotes || data; // adjust if needed
+  for (const symbol of symbols) {
+    try {
+      const data = await fetchStockForSymbol(symbol);
+      
+      // Extract key values from the API response.
+      // Adjust these paths if your API response structure is different.
+      const price = data.regularMarketPrice;
+      const change = data.regularMarketChange;
+      const percentChange = data.regularMarketChangePercent;
 
-    // Clear out the container before rendering fresh data
-    stockContainer.innerHTML = '';
-
-    // Build HTML output
-    quotes.forEach(quote => {
-      const symbol = quote.symbol;
-      const price = quote.regularMarketPrice;
-      const change = quote.regularMarketChange;
-      const percentChange = quote.regularMarketChangePercent;
-
+      // Build HTML output for this stock
       const stockDiv = document.createElement('div');
       stockDiv.className = 'stock-info';
-
       stockDiv.innerHTML = `
         <h2>${symbol}</h2>
-        <p>Price: $${price}</p>
-        <p>Change: ${change} (${percentChange}%)</p>
+        <p>Price: $${price !== undefined ? price : 'N/A'}</p>
+        <p>Change: ${change !== undefined ? change : 'N/A'} (${percentChange !== undefined ? percentChange : 'N/A'}%)</p>
       `;
-
       stockContainer.appendChild(stockDiv);
-    });
-
-  } catch (error) {
-    console.error('Error fetching stock data:', error);
-    stockContainer.innerHTML = `<p style="color:red;">Error fetching data. Check console.</p>`;
+    } catch (error) {
+      console.error(`Error fetching data for ${symbol}:`, error);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'stock-info error';
+      errorDiv.innerHTML = `<h2>${symbol}</h2><p style="color:red;">Error fetching data</p>`;
+      stockContainer.appendChild(errorDiv);
+    }
   }
 }
 
-// Fetch once on page load
+// Fetch on page load and then every 30 seconds (30000ms)
 fetchStockData();
-
-// Set interval to fetch every 30 seconds
-setInterval(fetchStockData, 30_000);
+setInterval(fetchStockData, 30000);
