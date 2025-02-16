@@ -68,3 +68,11 @@ footer {
   padding: 1rem;
   margin-top: 2rem;
 }
+
+.positive-change {
+  background-color: #e6ffe6; /* Light green */
+}
+
+.negative-change {
+  background-color: #ffe6e6; /* Light red */
+}
