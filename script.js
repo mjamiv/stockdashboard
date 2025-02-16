@@ -1,7 +1,7 @@
 // script.js
 
 const stockContainer = document.getElementById('stock-container');
-const symbols = ['RIOT', 'MSTR'];
+const symbols = ['RIOT', 'MSTR', 'IBIT', 'MARA'];
 
 const options = {
   method: 'GET',
