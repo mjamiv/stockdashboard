@@ -23,44 +23,74 @@ async function fetchStockData() {
 
     const response = await fetch(endpoint, options);
     const data = await response.json();
-
-    console.log(data); // Inspect the structure in the console
+    console.log(data); // Inspect the returned structure
 
     // Clear out the container before rendering fresh data
     stockContainer.innerHTML = '';
 
-    // Depending on the API, the data might be an array or nested under a key.
-    // Here we'll assume it's an array of stock objects.
+    // Assuming the API returns an array of stock objects
     if (Array.isArray(data)) {
       data.forEach(stock => {
+        // Extract the desired fields
         const symbol = stock.symbol || 'N/A';
-        const price = stock.regularMarketPrice || 'N/A';
-        const change = stock.regularMarketChange || 'N/A';
-        const percentChange = stock.regularMarketChangePercent || 'N/A';
+        const name = stock.name || 'N/A';
+        const price = stock.price !== undefined ? stock.price : 'N/A';
+        const open = stock.open !== undefined ? stock.open : 'N/A';
+        const high = stock.high !== undefined ? stock.high : 'N/A';
+        const low = stock.low !== undefined ? stock.low : 'N/A';
+        const volume = stock.volume || 'N/A';
+        const previousClose = stock.previous_close !== undefined ? stock.previous_close : 'N/A';
+        const change = stock.change !== undefined ? stock.change : 'N/A';
+        const changePercent = stock.change_percent !== undefined ? stock.change_percent : 'N/A';
+        const preOrPostMarket = stock.pre_or_post_market !== undefined ? stock.pre_or_post_market : 'N/A';
+        const preOrPostMarketChange = stock.pre_or_post_market_change !== undefined ? stock.pre_or_post_market_change : 'N/A';
+        const preOrPostMarketChangePercent = stock.pre_or_post_market_change_percent !== undefined ? stock.pre_or_post_market_change_percent : 'N/A';
+        const lastUpdate = stock.last_update_utc || 'N/A';
 
+        // Build HTML output for each stock
         const stockDiv = document.createElement('div');
         stockDiv.className = 'stock-info';
         stockDiv.innerHTML = `
-          <h2>${symbol}</h2>
-          <p>Price: $${price}</p>
-          <p>Change: ${change} (${percentChange}%)</p>
+          <h2>${name} (${symbol})</h2>
+          <p><strong>Price:</strong> $${price}</p>
+          <p><strong>Open:</strong> $${open} | <strong>High:</strong> $${high} | <strong>Low:</strong> $${low}</p>
+          <p><strong>Previous Close:</strong> $${previousClose}</p>
+          <p><strong>Change:</strong> ${change} (${changePercent}%)</p>
+          <p><strong>Pre/Post Market:</strong> $${preOrPostMarket} (Change: ${preOrPostMarketChange}, ${preOrPostMarketChangePercent}%)</p>
+          <p><strong>Volume:</strong> ${volume}</p>
+          <p><strong>Last Update:</strong> ${lastUpdate}</p>
         `;
         stockContainer.appendChild(stockDiv);
       });
-    } else if (data && data.data) {
-      // If your API nests the results in a 'data' property
+    } else if (data && Array.isArray(data.data)) {
+      // In case the API nests results under a 'data' property
       data.data.forEach(stock => {
         const symbol = stock.symbol || 'N/A';
-        const price = stock.regularMarketPrice || 'N/A';
-        const change = stock.regularMarketChange || 'N/A';
-        const percentChange = stock.regularMarketChangePercent || 'N/A';
+        const name = stock.name || 'N/A';
+        const price = stock.price !== undefined ? stock.price : 'N/A';
+        const open = stock.open !== undefined ? stock.open : 'N/A';
+        const high = stock.high !== undefined ? stock.high : 'N/A';
+        const low = stock.low !== undefined ? stock.low : 'N/A';
+        const volume = stock.volume || 'N/A';
+        const previousClose = stock.previous_close !== undefined ? stock.previous_close : 'N/A';
+        const change = stock.change !== undefined ? stock.change : 'N/A';
+        const changePercent = stock.change_percent !== undefined ? stock.change_percent : 'N/A';
+        const preOrPostMarket = stock.pre_or_post_market !== undefined ? stock.pre_or_post_market : 'N/A';
+        const preOrPostMarketChange = stock.pre_or_post_market_change !== undefined ? stock.pre_or_post_market_change : 'N/A';
+        const preOrPostMarketChangePercent = stock.pre_or_post_market_change_percent !== undefined ? stock.pre_or_post_market_change_percent : 'N/A';
+        const lastUpdate = stock.last_update_utc || 'N/A';
 
         const stockDiv = document.createElement('div');
         stockDiv.className = 'stock-info';
         stockDiv.innerHTML = `
-          <h2>${symbol}</h2>
-          <p>Price: $${price}</p>
-          <p>Change: ${change} (${percentChange}%)</p>
+          <h2>${name} (${symbol})</h2>
+          <p><strong>Price:</strong> $${price}</p>
+          <p><strong>Open:</strong> $${open} | <strong>High:</strong> $${high} | <strong>Low:</strong> $${low}</p>
+          <p><strong>Previous Close:</strong> $${previousClose}</p>
+          <p><strong>Change:</strong> ${change} (${changePercent}%)</p>
+          <p><strong>Pre/Post Market:</strong> $${preOrPostMarket} (Change: ${preOrPostMarketChange}, ${preOrPostMarketChangePercent}%)</p>
+          <p><strong>Volume:</strong> ${volume}</p>
+          <p><strong>Last Update:</strong> ${lastUpdate}</p>
         `;
         stockContainer.appendChild(stockDiv);
       });
