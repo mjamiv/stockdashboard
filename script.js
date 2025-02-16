@@ -9,8 +9,8 @@ const symbols = ['AAPL', 'MSFT'];
 const options = {
   method: 'GET',
   headers: {
-    'X-RapidAPI-Key': 'YOUR_RAPIDAPI_KEY',
-    'X-RapidAPI-Host': 'YOUR_RAPIDAPI_HOST'
+    'X-RapidAPI-Key': 'b83abbc192mshf353298bef11115p1864e4jsn6542ca66d145',
+    'X-RapidAPI-Host': 'real-time-finance-data.p.rapidapi.com'
   }
 };
 
